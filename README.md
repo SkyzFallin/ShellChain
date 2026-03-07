@@ -1,24 +1,30 @@
 <div align="center">
 
-<img src="sc.jpg" alt="ShellChain" width="760"/>
-
-<br/>
-
-<svg xmlns="http://www.w3.org/2000/svg" width="760" height="40" viewBox="0 0 760 40">
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="180" viewBox="0 0 760 180">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" style="stop-color:#0d1117;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#161b22;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#1a1f2e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d1117;stop-opacity:1" />
     </linearGradient>
   </defs>
-  <rect width="760" height="40" fill="url(#bg)" rx="6"/>
-  <text x="380" y="26" font-family="'Courier New', monospace" font-size="13" fill="#58a6ff" text-anchor="middle" letter-spacing="2">SSH + su command execution for non-interactive shells</text>
+  <rect width="760" height="180" fill="url(#bg)" rx="8"/>
+  <rect x="0" y="0" width="4" height="180" fill="#58a6ff" rx="2"/>
+  <rect x="756" y="0" width="4" height="180" fill="#58a6ff" rx="2"/>
+  <text x="380" y="72" font-family="'Courier New', monospace" font-size="42" font-weight="bold" fill="#58a6ff" text-anchor="middle" letter-spacing="4">ShellChain</text>
+  <text x="380" y="108" font-family="'Courier New', monospace" font-size="14" fill="#8b949e" text-anchor="middle" letter-spacing="2">SSH + su · Non-Interactive Shell Command Execution</text>
+  <text x="380" y="148" font-family="'Courier New', monospace" font-size="11" fill="#3fb950" text-anchor="middle">[ expect ]  [ ssh ]  [ automation ]  [ pentest ]  [ ci/cd ]</text>
 </svg>
+
+<br/>
+
+<img src="sc.jpg" alt="ShellChain" width="760"/>
 
 <br/><br/>
 
-![Shell](https://img.shields.io/badge/shell-bash%20%2F%20expect-4ec9b0?style=flat-square&logo=gnu-bash&logoColor=white)
+![Shell](https://img.shields.io/badge/shell-expect%20%2F%20bash-4ec9b0?style=flat-square&logo=gnu-bash&logoColor=white)
 ![Platform](https://img.shields.io/badge/platform-Linux%20%2F%20Kali-c586c0?style=flat-square&logo=linux&logoColor=white)
+![Version](https://img.shields.io/badge/version-1.0-58a6ff?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-6a9955?style=flat-square)
 ![Author](https://img.shields.io/badge/author-SkyzFallin-ce9178?style=flat-square&logo=github&logoColor=white)
 
@@ -56,6 +62,54 @@ One command. Full chain. Clean output.
 
 ---
 
+## Use Cases
+
+ShellChain was built for situations where interactive TTY allocation isn't possible or practical:
+
+- **Penetration testing** — lateral movement between users after initial foothold, without spawning a full interactive shell
+- **MCP / AI agent automation** — feed commands through Claude's Kali MCP server or similar agentic frameworks that invoke tools non-interactively
+- **CI/CD pipelines** — run privileged post-deploy steps as a service account without baking `sudo` into the pipeline
+- **Cron jobs** — execute maintenance tasks as a different user on a schedule
+- **Automation scripts** — anywhere you need `ssh user1 → su user2 → run command` in a single scriptable call
+
+> **`su` vs `sudo`:** ShellChain handles `su` (target user's own password). If the remote host uses `sudo` instead, wrap your command: `"sudo -u targetuser command"` and pass the SSH user's sudo password as `su_pass`.
+
+---
+
+## Requirements
+
+| Dependency | Minimum Version | Notes |
+|------------|----------------|-------|
+| `expect` | 5.x | Core requirement — handles TTY simulation |
+| `openssh-client` | Any modern | Already present on most systems |
+| `bash` | 4.x | For wrapper alias / scripting |
+
+```bash
+# Debian / Ubuntu / Kali
+sudo apt install expect
+
+# RHEL / CentOS / Fedora
+sudo yum install expect
+
+# Arch
+sudo pacman -S expect
+```
+
+---
+
+## Compatibility
+
+| OS | Status |
+|----|--------|
+| Kali Linux | ✅ Tested |
+| Ubuntu 20.04 / 22.04 / 24.04 | ✅ Tested |
+| Debian 11 / 12 | ✅ Tested |
+| RHEL / CentOS 7+ | ✅ Compatible |
+| Arch Linux | ✅ Compatible |
+| macOS (Homebrew expect) | ⚠️ Mostly works — not primary target |
+
+---
+
 ## Installation
 
 ```bash
@@ -67,22 +121,12 @@ chmod +x shellchain.sh
 sudo cp shellchain.sh /usr/local/bin/shellchain
 ```
 
-### Dependencies
-
-| Package | Purpose |
-|---------|---------|
-| `expect` | Handles interactive password prompts |
-| `ssh` | You already have this |
+Verify:
 
 ```bash
-# Debian / Ubuntu / Kali
-sudo apt install expect
-
-# RHEL / CentOS / Fedora
-sudo yum install expect
-
-# Arch
-sudo pacman -S expect
+shellchain
+# ShellChain - SSH + su command execution for non-interactive shells
+# Usage: shellchain <target> <ssh_user> <ssh_pass> <su_user> <su_pass> "<cmd>" [timeout]
 ```
 
 ---
@@ -127,9 +171,27 @@ shellchain 10.10.10.162 alice 'alicepass' bob 'bobpass' "find / -perm -4000 2>/d
 SSH_KEY=/path/to/private_key shellchain 10.10.10.79 alice '' bob 'bobpass' "whoami"
 ```
 
-**Same user (skips `su`, runs directly over SSH):**
+**Same user — skips `su`, runs directly over SSH:**
 ```bash
 shellchain 10.10.10.162 alice 'alicepass' alice 'alicepass' "sudo -l"
+```
+
+**Pentest — read sensitive file after foothold:**
+```bash
+shellchain 10.10.10.50 www-data 'webpass' root 'r00tpass' "cat /etc/shadow"
+```
+
+**Clean output for scripting (strip echo + trailing prompt):**
+```bash
+shellchain 10.10.10.162 alice 'alicepass' bob 'bobpass' "cat /etc/passwd" | sed '1d;/^\$ $/d'
+```
+
+**Suggested alias:**
+```bash
+# Add to ~/.bashrc or ~/.zshrc
+alias sc='shellchain'
+
+sc 10.10.10.162 alice 'alicepass' bob 'bobpass' "whoami"
 ```
 
 ---
@@ -154,6 +216,122 @@ shellchain 10.10.10.162 alice 'alicepass' alice 'alicepass' "sudo -l"
 
 ---
 
+## Script Preview
+
+<details>
+<summary><code>shellchain.sh</code> — click to expand</summary>
+
+```tcl
+#!/usr/bin/expect -f
+#
+# ShellChain - SSH + su command execution for non-interactive shells
+# https://github.com/SkyzFallin/ShellChain
+#
+# Usage:
+#   shellchain <target> <ssh_user> <ssh_pass> <su_user> <su_pass> "<command>" [timeout]
+#
+# SSH Key Auth:
+#   SSH_KEY=/path/to/key shellchain <target> <ssh_user> "" <su_user> <su_pass> "<cmd>"
+
+if {$argc < 6} {
+    puts "ShellChain - SSH + su command execution for non-interactive shells"
+    puts ""
+    puts "Usage: shellchain <target> <ssh_user> <ssh_pass> <su_user> <su_pass> \"<cmd>\" \[timeout\]"
+    puts ""
+    puts "Examples:"
+    puts "  shellchain 10.10.10.162 alice 'pass1' bob 'pass2' \"id\""
+    puts "  shellchain 10.10.10.162 alice 'pass1' bob 'pass2' \"cat /etc/shadow\" 60"
+    puts ""
+    puts "SSH Key Auth:"
+    puts "  SSH_KEY=/tmp/id_rsa shellchain 10.10.10.79 alice '' bob 'pass2' \"whoami\""
+    puts ""
+    exit 1
+}
+
+set target   [lindex $argv 0]
+set ssh_user [lindex $argv 1]
+set ssh_pass [lindex $argv 2]
+set su_user  [lindex $argv 3]
+set su_pass  [lindex $argv 4]
+set cmd      [lindex $argv 5]
+
+if {$argc >= 7} { set timeout [lindex $argv 6] } else { set timeout 30 }
+
+set ssh_key ""
+if {[info exists env(SSH_KEY)]} { set ssh_key $env(SSH_KEY) }
+
+# --- SSH ---
+log_user 0
+set ssh_opts "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR"
+
+if {$ssh_key ne ""} {
+    spawn ssh {*}$ssh_opts -i $ssh_key ${ssh_user}@${target}
+} else {
+    spawn ssh {*}$ssh_opts ${ssh_user}@${target}
+}
+
+expect {
+    -re "password:|Password:"    { send "${ssh_pass}\r" }
+    -re "passphrase"             { send "${ssh_pass}\r" }
+    -re "\\\$ $|# $|> $"        {}
+    "Permission denied"          { puts "ERROR: SSH auth failed for ${ssh_user}@${target}"; exit 1 }
+    "No route to host"           { puts "ERROR: Cannot reach ${target}"; exit 1 }
+    "Connection refused"         { puts "ERROR: SSH connection refused on ${target}"; exit 1 }
+    "Connection timed out"       { puts "ERROR: SSH connection timed out to ${target}"; exit 1 }
+    timeout                      { puts "ERROR: SSH timeout connecting to ${target}"; exit 1 }
+}
+expect {
+    -re "\\\$ $|# $|> $" {}
+    timeout { puts "ERROR: Timed out waiting for shell prompt"; exit 1 }
+}
+
+# --- su (skip if same user) ---
+if {$su_user ne $ssh_user} {
+    send "su - ${su_user}\r"
+    expect {
+        -re "Password:|password:" { send "${su_pass}\r" }
+        timeout { puts "ERROR: su did not prompt for password"; exit 1 }
+    }
+    expect {
+        -re "\\\$ $|# $|> $"   {}
+        "Authentication failure" { puts "ERROR: su authentication failed for ${su_user}"; exit 1 }
+        "incorrect password"     { puts "ERROR: Incorrect password for ${su_user}"; exit 1 }
+        timeout                  { puts "ERROR: Timed out after su to ${su_user}"; exit 1 }
+    }
+}
+
+# --- Execute ---
+log_user 1
+send "${cmd}\r"
+expect {
+    -re "\\\$ $|# $|> $" {}
+    timeout {}
+}
+log_user 0
+
+# --- Exit ---
+if {$su_user ne $ssh_user} { send "exit\r"; expect -re "\\\$ |# |> " }
+send "exit\r"
+expect eof
+exit 0
+```
+
+</details>
+
+---
+
+## Limitations
+
+- **Interactive commands not supported** — `vim`, `top`, `less`, and anything requiring keyboard input will hang. Commands must produce output and exit cleanly.
+- **One level of `su`** — for double user-hops (user1 → user2 → user3), chain two shellchain calls.
+- **Output includes echo + trailing prompt** — pipe through `sed '1d;/^\$ $/d'` to strip when scripting.
+- **Special characters in passwords** — wrap in single quotes. Escape inner single quotes with `'\''`.
+- **Massive output** — for commands producing large output, redirect to a file on target and retrieve separately.
+- **`sudo` vs `su`** — ShellChain handles `su` (target user's password). For `sudo`, wrap your command and pass the SSH user's sudo password.
+- **No multiplexing** — each call opens a fresh SSH connection. For bulk operations, loop or parallelize externally.
+
+---
+
 ## Error Reference
 
 | Message | Cause |
@@ -161,24 +339,25 @@ shellchain 10.10.10.162 alice 'alicepass' alice 'alicepass' "sudo -l"
 | `ERROR: SSH auth failed` | Bad SSH credentials |
 | `ERROR: Cannot reach` | Host down or unreachable |
 | `ERROR: SSH connection refused` | No SSH service on target |
+| `ERROR: SSH connection timed out` | Firewall or slow network |
+| `ERROR: SSH timeout connecting` | General connect timeout |
+| `ERROR: Timed out waiting for shell prompt` | Shell didn't produce a recognizable prompt |
+| `ERROR: su did not prompt for password` | Unexpected su behavior on target |
 | `ERROR: su authentication failed` | Bad su password |
-| `ERROR: Timed out...` | Operation exceeded timeout |
-
----
-
-## Notes
-
-- Output includes the command echo and a trailing prompt. Pipe through `sed '1d;/^\$ $/d'` to strip them when scripting.
-- Passwords with special characters should be wrapped in single quotes. Escape inner single quotes with `'\''`.
-- For commands that produce massive output, redirect to a file on the target and retrieve separately.
-- Interactive commands (`vim`, `top`, `less`) are not supported — commands must produce output and exit.
-- Supports one level of `su`. For double user-hops, chain two shellchain calls.
+| `ERROR: Incorrect password` | Wrong su target password |
+| `ERROR: Timed out after su` | su prompt wait exceeded timeout |
 
 ---
 
 ## License
 
 MIT — see [LICENSE](LICENSE) for details.
+
+---
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for responsible disclosure and credential handling guidance.
 
 ---
 
