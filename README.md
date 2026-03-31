@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="banner.svg" alt="ShellChain Banner" width="760"/>
+<img src="sc.jpg" alt="ShellChain" width="760"/>
 
 <br/>
 
-<img src="sc.jpg" alt="ShellChain" width="760"/>
+<img src="banner.svg" alt="ShellChain Banner" width="760"/>
 
 <br/><br/>
 
