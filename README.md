@@ -1,20 +1,6 @@
 <div align="center">
 
-<svg xmlns="http://www.w3.org/2000/svg" width="760" height="180" viewBox="0 0 760 180">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#0d1117;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#1a1f2e;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#0d1117;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-  <rect width="760" height="180" fill="url(#bg)" rx="8"/>
-  <rect x="0" y="0" width="4" height="180" fill="#58a6ff" rx="2"/>
-  <rect x="756" y="0" width="4" height="180" fill="#58a6ff" rx="2"/>
-  <text x="380" y="72" font-family="'Courier New', monospace" font-size="42" font-weight="bold" fill="#58a6ff" text-anchor="middle" letter-spacing="4">ShellChain</text>
-  <text x="380" y="108" font-family="'Courier New', monospace" font-size="14" fill="#8b949e" text-anchor="middle" letter-spacing="2">SSH + su · Non-Interactive Shell Command Execution</text>
-  <text x="380" y="148" font-family="'Courier New', monospace" font-size="11" fill="#3fb950" text-anchor="middle">[ expect ]  [ ssh ]  [ automation ]  [ pentest ]  [ ci/cd ]</text>
-</svg>
+<img src="banner.svg" alt="ShellChain Banner" width="760"/>
 
 <br/>
 
